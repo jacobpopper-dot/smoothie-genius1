@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smoothie Recipe Selector</title>
+    <style>
+        :root {
+            --color-primary: #2d8659;
+            --color-primary-hover: #23654a;
+            --color-bg: #f5f9f7;
+            --color-surface: #ffffff;
+            --color-text: #1a3a2a;
+            --color-text-light: #5a7a6a;
+            --color-accent: #e8b4a8;
+            --color-border: #d0e0d8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f9f7 0%, #e8f3ef 100%);
+            color: var(--color-text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--color-primary);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--color-text-light);
+        }
+
+        .selector-section {
+            background: var(--color-surface);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        }
+
+        .selector-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        .ingredient-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .ingredient-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--color-text);
+            font-size: 0.95rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 12px;
+            background-color: var(--color-bg);
+            border: 2px solid var(--color-border);
+            border-radius: 8px;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            margin: 0;
+            font-weight: 400;
+            cursor: pointer;
+            gap: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--color-primary);
+        }
+
+        .checkbox-group label:hover {
+            color: var(--color-primary);
+        }
+
+        select {
+            padding: 10px 12px;
+            border: 2px solid var(--color-border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: var(--color-surface);
+            color: var(--color-text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        select:hover {
+            border-color: var(--color-primary);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(45, 134, 89, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 28px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--color-primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(45, 134, 89, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: var(--color-accent);
+            color: var(--color-text);
+        }
+
+        .btn-secondary:hover {
+            background-color: #dda895;
+            transform: translateY(-2px);
+        }
+
+        .results-section {
+            margin-bottom: 30px;
+        }
+
+        .recipe-card {
+            background: var(--color-surface);
+            border-left: 4px solid var(--color-primary);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .recipe-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(45, 134, 89, 0.15);
+        }
+
+        .recipe-card h3 {
+            font-size: 1.4rem;
+            color: var(--color-primary);
+            margin-bottom: 15px;
+        }
+
+        .recipe-card.active {
+            background: linear-gradient(135deg, #f0f8f4 0%, #ffffff 100%);
+        }
+
+        .recipe-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .recipe-card.active .recipe-content {
+            max-height: 1000px;
+        }
+
+        .recipe-ingredients {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .ingredient-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            font-size: 0.95rem;
+            color: var(--color-text);
+        }
+
+        .ingredient-item::before {
+            content: "•";
+            color: var(--color-accent);
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .recipe-instructions {
+            background-color: var(--color-bg);
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-size: 0.95rem;
+            color: var(--color-text-light);
+            line-height: 1.6;
+        }
+
+        .recipe-description {
+            font-style: italic;
+            color: var(--color-text-light);
+            font-size: 0.9rem;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--color-border);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--color-text-light);
+            font-size: 1.1rem;
+        }
+
+        .no-results-emoji {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .ingredient-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .recipe-ingredients {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🥤 Smoothie Recipe Selector</h1>
+            <p class="subtitle">Select your ingredients and discover the perfect smoothie recipe</p>
+        </header>
+
+        <div class="message info" id="message"></div>
+
+        <div class="selector-section">
+            <div class="selector-title">Choose Your Ingredients</div>
+            
+            <div class="ingredient-grid">
+                <div class="ingredient-group">
+                    <label for="butter">Nut Butter (Select Multiple)</label>
+                    <div class="checkbox-group" id="butter">
+                        <label><input type="checkbox" name="butter" value="peanut"> Peanut Butter</label>
+                        <label><input type="checkbox" name="butter" value="hazelnut"> Hazelnut Butter</label>
+                    </div>
+                </div>
+
+                <div class="ingredient-group">
+                    <label for="fruit">Frozen Fruit (Select Multiple)</label>
+                    <div class="checkbox-group" id="fruit">
+                        <label><input type="checkbox" name="fruit" value="strawberries/banana"> Strawberries/Banana</label>
+                        <label><input type="checkbox" name="fruit" value="blueberry/blackberry/raspberry"> Berry Blend</label>
+                        <label><input type="checkbox" name="fruit" value="blueberry/strawberry/mango"> Tropical Blend</label>
+                    </div>
+                </div>
+
+                <div class="ingredient-group">
+                    <label for="greens">Greens (Select Multiple)</label>
+                    <div class="checkbox-group" id="greens">
+                        <label><input type="checkbox" name="greens" value="spinach"> Spinach</label>
+                        <label><input type="checkbox" name="greens" value="kale"> Kale</label>
+                        <label><input type="checkbox" name="greens" value="none"> None</label>
+                    </div>
+                </div>
+
+                <div class="ingredient-group">
+                    <label for="sweetener">Sweetener (Select Multiple)</label>
+                    <div class="checkbox-group" id="sweetener">
+                        <label><input type="checkbox" name="sweetener" value="honey"> Honey</label>
+                        <label><input type="checkbox" name="sweetener" value="maple syrup"> Maple Syrup</label>
+                        <label><input type="checkbox" name="sweetener" value="none"> None</label>
+                    </div>
+                </div>
+
+                <div class="ingredient-group">
+                    <label for="addins">Add-ins (Select Multiple)</label>
+                    <div class="checkbox-group" id="addins">
+                        <label><input type="checkbox" name="addins" value="cocoa powder"> Cocoa Powder</label>
+                        <label><input type="checkbox" name="addins" value="espresso"> Espresso</label>
+                        <label><input type="checkbox" name="addins" value="chia seeds"> Chia Seeds</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-primary" onclick="findRecipes()">Find Recipes</button>
+                <button class="btn-secondary" onclick="createCustom()">Create Custom Recipe</button>
+                <button class="btn-secondary" onclick="randomRecipe()">Random Suggestion</button>
+                <button class="btn-secondary" onclick="resetSelectors()">Reset</button>
+            </div>
+        </div>
+
+        <div class="results-section" id="results"></div>
+    </div>
+
+    <script>
+        const recipes = {
+            "Strawberry Peanut Butter": {
+                butter: "peanut",
+                fruit: "strawberries/banana",
+                greens: "spinach",
+                sweetener: "honey",
+                addins: [],
+                ingredients: [
+                    "1 serving Ghost Cereal Milk protein",
+                    "240 ml milk",
+                    "30 ml peanut butter",
+                    "150 ml frozen strawberries/banana",
+                    "100 ml Greek yogurt",
+                    "15 ml honey",
+                    "Small handful spinach"
+                ],
+                instructions: "Blend 60-90 seconds until smooth",
+                bestFor: "Morning energy, balanced macros"
+            },
+            "Berry Hazelnut Bliss": {
+                butter: "hazelnut",
+                fruit: "blueberry/blackberry/raspberry",
+                greens: "none",
+                sweetener: "maple syrup",
+                addins: [],
+                ingredients: [
+                    "1 serving Ghost Cereal Milk protein",
+                    "240 ml milk",
+                    "30 ml hazelnut butter",
+                    "150 ml frozen blueberry/blackberry/raspberry blend",
+                    "100 ml Greek yogurt",
+                    "15 ml maple syrup"
+                ],
+                instructions: "Blend 60-90 seconds until smooth",
+                bestFor: "Antioxidant boost, nutty flavor"
+            },
+            "Tropical Green": {
+                butter: "hazelnut",
+                fruit: "blueberry/strawberry/mango",
+                greens: "kale",
+                sweetener: "honey",
+                addins: [],
+                ingredients: [
+                    "1 serving Ghost Cereal Milk protein",
+                    "240 ml milk",
+                    "30 ml hazelnut butter",
+                    "150 ml frozen blueberry/strawberry/mango blend",
+                    "100 ml Greek yogurt",
+                    "15 ml honey",
+                    "Large handful kale"
+                ],
+                instructions: "Blend 90-120 seconds (kale needs extra time)",
+                bestFor: "Nutrient-dense, vitamin C, tropical vibes"
+            },
+            "Chocolate Espresso Power": {
+                butter: "peanut",
+                fruit: "strawberries/banana",
+                greens: "spinach",
+                sweetener: "honey",
+                addins: ["cocoa powder", "espresso"],
+                ingredients: [
+                    "1 serving Ghost Cereal Milk protein",
+                    "240 ml milk",
+                    "30 ml peanut butter",
+                    "150 ml frozen strawberries/banana",
+                    "100 ml Greek yogurt",
+                    "15 ml honey",
+                    "15 ml cocoa powder",
+                    "1 shot espresso (cooled) or 30 ml cold brew",
+                    "Small handful spinach"
+                ],
+                instructions: "Blend 60-90 seconds until smooth",
+                bestFor: "Pre-workout, afternoon pick-me-up"
+            },
+            "Simple Berry": {
+                butter: "peanut",
+                fruit: "blueberry/blackberry/raspberry",
+                greens: "none",
+                sweetener: "maple syrup",
+                addins: [],
+                ingredients: [
+                    "1 serving Ghost Cereal Milk protein",
+                    "240 ml milk",
+                    "30 ml peanut butter",
+                    "150 ml frozen blueberry/blackberry/raspberry blend",
+                    "100 ml Greek yogurt",
+                    "15 ml maple syrup"
+                ],
+                instructions: "Blend 60-90 seconds until smooth",
+                bestFor: "Quick prep, classic flavor"
+            }
+        };
+
+        function getSelectedIngredients() {
+            const getCheckboxValues = (name) => {
+                return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`))
+                    .map(cb => cb.value);
+            };
+
+            return {
+                butter: getCheckboxValues('butter'),
+                fruit: getCheckboxValues('fruit'),
+                greens: getCheckboxValues('greens'),
+                sweetener: getCheckboxValues('sweetener'),
+                addins: getCheckboxValues('addins')
+            };
+        }
+
+        function findRecipes() {
+            const selected = getSelectedIngredients();
+            const matches = [];
+
+            for (const [name, recipe] of Object.entries(recipes)) {
+                let isMatch = true;
+
+                if (selected.butter.length > 0 && !selected.butter.includes(recipe.butter)) isMatch = false;
+                if (selected.fruit.length > 0 && !selected.fruit.includes(recipe.fruit)) isMatch = false;
+                if (selected.greens.length > 0 && !selected.greens.includes(recipe.greens)) isMatch = false;
+                if (selected.sweetener.length > 0 && !selected.sweetener.includes(recipe.sweetener)) isMatch = false;
+                
+                if (selected.addins.length > 0) {
+                    const hasMatchingAddin = selected.addins.some(addin => recipe.addins.includes(addin));
+                    if (recipe.addins.length === 0 && selected.addins.length > 0) isMatch = false;
+                    else if (recipe.addins.length > 0 && !hasMatchingAddin) isMatch = false;
+                }
+
+                if (isMatch) matches.push(name);
+            }
+
+            displayResults(matches, selected);
+        }
+
+        function randomRecipe() {
+            const recipeNames = Object.keys(recipes);
+            const randomName = recipeNames[Math.floor(Math.random() * recipeNames.length)];
+            displayResults([randomName], {});
+            showMessage(`Random suggestion: ${randomName}! 🎲`, 'info');
+        }
+
+        function displayResults(matches, selected) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            if (matches.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="no-results">
+                        <div class="no-results-emoji">🔍</div>
+                        <p>No recipes found with those exact ingredients.</p>
+                        <p style="margin-top: 10px; font-size: 0.9rem;">Try selecting "Any" for some ingredients, or use the Random Suggestion button!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const title = document.createElement('div');
+            title.className = 'selector-title';
+            title.textContent = `${matches.length} Recipe${matches.length !== 1 ? 's' : ''} Found!`;
+            resultsDiv.appendChild(title);
+
+            matches.forEach(recipeName => {
+                const recipe = recipes[recipeName];
+                const card = document.createElement('div');
+                card.className = 'recipe-card';
+                card.onclick = () => card.classList.toggle('active');
+
+                card.innerHTML = `
+                    <h3>${recipeName}</h3>
+                    <div class="recipe-content">
+                        <div class="recipe-ingredients">
+                            ${recipe.ingredients.map(ing => `
+                                <div class="ingredient-item">${ing}</div>
+                            `).join('')}
+                        </div>
+                        <div class="recipe-instructions">
+                            <strong>Instructions:</strong> ${recipe.instructions}
+                        </div>
+                        <div class="recipe-description">
+                            <strong>Best for:</strong> ${recipe.bestFor}
+                        </div>
+                    </div>
+                `;
+
+                resultsDiv.appendChild(card);
+            });
+        }
+
+        function resetSelectors() {
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('message').classList.remove('show');
+        }
+
+        function createCustom() {
+            const selected = getSelectedIngredients();
+
+            if (selected.butter.length === 0 || selected.fruit.length === 0) {
+                showMessage('⚠️ Please select at least a nut butter and a fruit to create a custom recipe', 'info');
+                return;
+            }
+
+            // Build custom recipe name from selections
+            const fruitNames = selected.fruit.map(f => f.split('/')[0]).join(' + ');
+            const customName = `${fruitNames} ${selected.butter[0].split(' ')[0].charAt(0).toUpperCase() + selected.butter[0].split(' ')[0].slice(1)}`;
+
+            const customRecipe = {
+                name: customName,
+                butter: selected.butter[0],
+                fruits: selected.fruit,
+                greens: selected.greens.length > 0 ? selected.greens[0] : 'none',
+                sweetener: selected.sweetener.length > 0 ? selected.sweetener[0] : 'none',
+                addins: selected.addins,
+                ingredients: buildIngredients(selected),
+                instructions: buildInstructions(selected),
+                bestFor: "Your custom creation!"
+            };
+
+            displayCustomRecipe(customRecipe);
+        }
+
+        function buildIngredients(selected) {
+            const ingredients = [
+                "1 serving Ghost Cereal Milk protein",
+                "240 ml milk"
+            ];
+
+            // Split 30 ml of nut butter evenly across selected butters
+            if (selected.butter.length > 0) {
+                const butterPerItem = 30 / selected.butter.length;
+                selected.butter.forEach(butter => {
+                    ingredients.push(`${butterPerItem.toFixed(0)} ml ${butter}`);
+                });
+            }
+
+            // Split 150 ml of fruit evenly across selected fruits
+            if (selected.fruit.length > 0) {
+                const fruitPerItem = 150 / selected.fruit.length;
+                selected.fruit.forEach(fruit => {
+                    ingredients.push(`${fruitPerItem.toFixed(0)} ml frozen ${fruit}`);
+                });
+            }
+
+            ingredients.push("100 ml Greek yogurt");
+
+            if (selected.sweetener.length > 0 && selected.sweetener[0] !== 'none') {
+                ingredients.push(`15 ml ${selected.sweetener[0]}`);
+            }
+
+            if (selected.greens.length > 0 && selected.greens[0] !== 'none') {
+                const greensAmount = selected.greens[0] === 'kale' ? 'Large handful' : 'Small handful';
+                ingredients.push(`${greensAmount} ${selected.greens[0]}`);
+            }
+
+            if (selected.addins.includes('cocoa powder')) {
+                ingredients.push("15 ml cocoa powder");
+            }
+            if (selected.addins.includes('espresso')) {
+                ingredients.push("1 shot espresso (cooled) or 30 ml cold brew");
+            }
+            if (selected.addins.includes('chia seeds')) {
+                ingredients.push("10-15 ml chia seeds (+ 30 ml extra milk)");
+            }
+
+            return ingredients;
+        }
+
+        function buildInstructions(selected) {
+            const hasKale = selected.greens.includes('kale');
+            return hasKale ? "Blend 90-120 seconds (kale needs extra time)" : "Blend 60-90 seconds until smooth";
+        }
+
+        function displayCustomRecipe(recipe) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            const title = document.createElement('div');
+            title.className = 'selector-title';
+            title.textContent = '✨ Your Custom Smoothie Recipe';
+            resultsDiv.appendChild(title);
+
+            const card = document.createElement('div');
+            card.className = 'recipe-card active';
+
+            card.innerHTML = `
+                <h3>${recipe.name}</h3>
+                <div class="recipe-content">
+                    <div class="recipe-ingredients">
+                        ${recipe.ingredients.map(ing => `
+                            <div class="ingredient-item">${ing}</div>
+                        `).join('')}
+                    </div>
+                    <div class="recipe-instructions">
+                        <strong>Instructions:</strong> ${recipe.instructions}
+                    </div>
+                    <div class="recipe-description">
+                        <strong>Best for:</strong> ${recipe.bestFor}
+                    </div>
+                </div>
+            `;
+
+            resultsDiv.appendChild(card);
+            showMessage('🎉 Custom recipe created! Adjust your selections to experiment with new combinations', 'success');
+        }
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message ${type} show`;
+            setTimeout(() => msg.classList.remove('show'), 4000);
+        }
+
+        // Display welcome message on load
+        window.addEventListener('load', () => {
+            showMessage('👋 Welcome! Select your ingredients to find the perfect smoothie recipe', 'info');
+        });
+    </script>
+</body>
+</html>
